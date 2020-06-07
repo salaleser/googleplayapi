@@ -1,4 +1,4 @@
-package scraper
+package googleplayapi
 
 import (
 	"encoding/json"
@@ -8,22 +8,8 @@ import (
 	"os"
 )
 
-// MetadataResponse is a vitalina's Application's metadata structure.
-type MetadataResponse struct { // TODO add more fields
-	Title       string
-	Link        string
-	AppID       string
-	ArtistName  string
-	Rating      float32
-	ReleaseDate string
-	Subtitle    string
-	Description string
-	Screenshot1 string // TODO add array
-	Logo        string
-}
-
 func parseIDs(body []byte) []MetadataResponse {
-	const errMsg = "[ERR] scraper.parseGpIDs(%s...): %v\n"
+	const errMsg = "[ERR] googleplayapi.parseIDs(%s...): %v\n"
 	var data1 [][]interface{}
 	if err := json.Unmarshal(body, &data1); err != nil {
 		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
@@ -122,7 +108,7 @@ func parseIDs(body []byte) []MetadataResponse {
 }
 
 func parseMetadata(body []byte) MetadataResponse {
-	const errMsg = "[ERR] scraper.parseGpMetadata(%s...): %v\n"
+	const errMsg = "[ERR] googleplayapi.parseMetadata(%s...): %v\n"
 	var data1 [][]interface{}
 	if err := json.Unmarshal(body, &data1); err != nil {
 		err := fmt.Errorf("unmarshal gp metadata: %v", err)
@@ -158,7 +144,7 @@ func parseMetadata(body []byte) MetadataResponse {
 	}
 
 	return MetadataResponse{
-		// AppID: appID,
+		// AppID:      appID,
 		ArtistName: data2[0][12][5].([]interface{})[1].(string),
 		// ReleaseDate: data2[0][6][0][1].(float32),
 		// Rating:      data2[0][0][0].(string),

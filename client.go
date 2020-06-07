@@ -1,4 +1,4 @@
-package scraper
+package googleplayapi
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ var debug = false
 
 // AppIDs returns application IDs by a keyword.
 func AppIDs(keyword string, gl string, hl string) []MetadataResponse {
-	const errMsg = "[ERR] scraper.GpAppIDs(%s,%s,%s): %v\n"
+	const errMsg = "[ERR] googleplayapi.AppIDs(%s,%s,%s): %v\n"
 	const baseURL = "https://play.google.com/_/PlayStoreUi/data/batchexecute"
 	uri, err := url.Parse(baseURL)
 	if err != nil {
@@ -51,7 +51,7 @@ func AppIDs(keyword string, gl string, hl string) []MetadataResponse {
 
 // App returns an Application's metadata by ID packageName.
 func App(packageName string, gl string, hl string) MetadataResponse {
-	const errMsg = "[ERR] scraper.AppGp(%s,%s,%s): %v\n"
+	const errMsg = "[ERR] googleplayapi.App(%s,%s,%s): %v\n"
 	const baseURL = "https://play.google.com/_/PlayStoreUi/data/batchexecute"
 	uri, err := url.Parse(baseURL)
 	if err != nil {
