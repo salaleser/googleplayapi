@@ -11,19 +11,19 @@ import (
 var debug = false
 
 // AppIDs returns application IDs by a keyword.
-func AppIDs(keyword string, gl string, hl string) []MetadataResponse {
+func AppIDs(keyword string, gl string, hl string) ([]MetadataResponse, error) {
 	const errMsg = "[ERR] googleplayapi.AppIDs(%s,%s,%s): %v\n"
 	const baseURL = "https://play.google.com/_/PlayStoreUi/data/batchexecute"
 	uri, err := url.Parse(baseURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, errMsg, keyword, gl, hl, err)
-		return []MetadataResponse{}
+		return []MetadataResponse{}, err
 	}
 
 	query, err := url.ParseQuery(uri.RawQuery)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, errMsg, keyword, gl, hl, err)
-		return []MetadataResponse{}
+		return []MetadataResponse{}, err
 	}
 	query.Add("gl", gl)
 	query.Add("hl", hl)
@@ -37,16 +37,16 @@ func AppIDs(keyword string, gl string, hl string) []MetadataResponse {
 	resp, err := http.PostForm(baseURL, data)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, errMsg, keyword, gl, hl, err)
-		return []MetadataResponse{}
+		return []MetadataResponse{}, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, errMsg, keyword, gl, hl, err)
-		return []MetadataResponse{}
+		return []MetadataResponse{}, err
 	}
 
-	return parseIDs(body[5:])
+	return parseIDs(body[5:]), nil
 }
 
 // App returns an Application's metadata by ID packageName.
