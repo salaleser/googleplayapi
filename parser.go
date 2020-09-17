@@ -120,9 +120,7 @@ func parseMetadata(body []byte) MetadataResponse {
 	var ratingData [][][]interface{}
 	for _, d := range data1 {
 		if d[0].(string) != "wrb.fr" {
-			err := fmt.Errorf("the first section element isn't \"wrb.fr\" (%q)", d[0])
-			fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
-			return MetadataResponse{} // TODO handle error
+			continue
 		}
 
 		switch d[1].(string) {
