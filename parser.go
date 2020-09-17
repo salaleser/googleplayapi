@@ -116,42 +116,53 @@ func parseMetadata(body []byte) MetadataResponse {
 		return MetadataResponse{}
 	}
 
-	d := data1[0]
+	var metadataData [][][]interface{}
+	var ratingData [][][]interface{}
+	for i, d := range data1 {
+		if d[0].(string) != "wrb.fr" {
+			err := fmt.Errorf("the first section element isn't \"wrb.fr\" (%q)", d[0])
+			fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+			return MetadataResponse{} // TODO handle error
+		}
 
-	if d[0] != "wrb.fr" {
-		err := fmt.Errorf("the first metadata section element isn't \"wrb.fr\" (%q)", d[0])
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
-		return MetadataResponse{} // TODO handle error
+		switch d[1].(string) {
+		case "jLZZ2e":
+			metadataData = parse(d[2])
+		case "MLWfjd":
+			ratingData = parse(d[2])
+		default:
+			err := fmt.Errorf("the second section element not supported (%q)", d[0])
+			fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+			return MetadataResponse{} // TODO handle error
+		}
 	}
 
-	if d[1] != "jLZZ2e" {
-		err := fmt.Errorf("the second metadata section element isn't \"jLZZ2e\" (%q)", d[0])
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
-		return MetadataResponse{} // TODO handle error
+	return MetadataResponse{
+		// AppID:      appID,
+		ArtistName: metadataData[0][12][5].([]interface{})[1].(string),
+		// ReleaseDate: data2[0][6][0][1].(float32),
+		Rating:      ratingData[0][6][0].([]interface{})[1].(float32),
+		Title:       metadataData[0][0][0].(string),
+		Subtitle:    metadataData[0][10][1].([]interface{})[1].(string),
+		Description: metadataData[0][10][0].([]interface{})[1].(string),
+		Screenshot1: metadataData[0][12][0].([]interface{})[0].([]interface{})[3].([]interface{})[2].(string),
+		Logo:        metadataData[0][12][1].([]interface{})[3].([]interface{})[2].(string),
 	}
+}
 
+func parse(d interface{}) [][][]interface{} {
 	if d[2] == nil {
-		err := fmt.Errorf("the third metadata section element doesn't exist")
+		err := fmt.Errorf("the third section element doesn't exist")
 		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
 		return MetadataResponse{} // TODO handle error
 	}
 
-	var data2 [][][]interface{}
+	var data [][][]interface{}
 	if err := json.Unmarshal([]byte(d[2].(string)), &data2); err != nil {
 		err := fmt.Errorf("unmarshal gp metadata: %v", err)
 		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
 		return MetadataResponse{} // TODO handle error
 	}
 
-	return MetadataResponse{
-		// AppID:      appID,
-		ArtistName: data2[0][12][5].([]interface{})[1].(string),
-		// ReleaseDate: data2[0][6][0][1].(float32),
-		// Rating:      data2[0][0][0].(string),
-		Title:       data2[0][0][0].(string),
-		Subtitle:    data2[0][10][1].([]interface{})[1].(string),
-		Description: data2[0][10][0].([]interface{})[1].(string),
-		Screenshot1: data2[0][12][0].([]interface{})[0].([]interface{})[3].([]interface{})[2].(string),
-		Logo:        data2[0][12][1].([]interface{})[3].([]interface{})[2].(string),
-	}
+	return data
 }
