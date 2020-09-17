@@ -68,14 +68,14 @@ func App(packageName string, gl string, hl string) (MetadataResponse, error) {
 	query.Add("hl", hl)
 	uri.RawQuery = query.Encode()
 
-	// v1 := fmt.Sprintf("[d5UeYe,'[[%s,7]]',null,%s]", appID, appID)        // price
-	// v3 := fmt.Sprintf("[MLWfjd,'[[%s,7]]',null,%s]", appID, appID)        // rating
-	// v4 := fmt.Sprintf("[IoIWBc,'[[null,[%s,7]]]',null,%s]", appID, appID) // version
-	// v5 := fmt.Sprintf("[k8610b,'[[null,[%s,7]]]',null,%s]", appID, appID) // short rating
-	// v6 := fmt.Sprintf("[BQ0Ly,'[[null,[%s,7]]]',null,%s]", appID, appID)  // downloads
+	jLZZ2e := fmt.Sprintf("[jLZZ2e,'[[%s,7],2]',null,%s]", packageName, packageName)
+	// d5UeYe := fmt.Sprintf("[d5UeYe,'[[%s,7]]',null,%s]", packageName, packageName)        // price
+	MLWfjd := fmt.Sprintf("[MLWfjd,'[[%s,7]]',null,%s]", packageName, packageName) // rating
+	// IoIWBc := fmt.Sprintf("[IoIWBc,'[[null,[%s,7]]]',null,%s]", packageName, packageName) // version
+	// k8610b := fmt.Sprintf("[k8610b,'[[null,[%s,7]]]',null,%s]", packageName, packageName) // short rating
+	// BQ0Ly := fmt.Sprintf("[BQ0Ly,'[[null,[%s,7]]]',null,%s]", packageName, packageName)  // downloads
 
-	value := fmt.Sprintf("[[[jLZZ2e,'[[%s,7],2]',null,%s]]]",
-		packageName, packageName)
+	value := fmt.Sprintf("[[%s,%s]]", jLZZ2e, MLWfjd)
 
 	data := url.Values{}
 	data.Add("f.req", value)
