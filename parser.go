@@ -118,7 +118,7 @@ func parseMetadata(body []byte) MetadataResponse {
 
 	var metadataData [][][]interface{}
 	var ratingData [][][]interface{}
-	for i, d := range data1 {
+	for _, d := range data1 {
 		if d[0].(string) != "wrb.fr" {
 			err := fmt.Errorf("the first section element isn't \"wrb.fr\" (%q)", d[0])
 			fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
@@ -151,17 +151,17 @@ func parseMetadata(body []byte) MetadataResponse {
 }
 
 func parse(d interface{}) [][][]interface{} {
-	if d[2] == nil {
+	if d == nil {
 		err := fmt.Errorf("the third section element doesn't exist")
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
-		return MetadataResponse{} // TODO handle error
+		fmt.Fprintf(os.Stderr, "[ERR] %s", err.Error())
+		return nil // TODO handle error
 	}
 
 	var data [][][]interface{}
-	if err := json.Unmarshal([]byte(d[2].(string)), &data2); err != nil {
+	if err := json.Unmarshal([]byte(d.(string)), &data); err != nil {
 		err := fmt.Errorf("unmarshal gp metadata: %v", err)
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
-		return MetadataResponse{} // TODO handle error
+		fmt.Fprintf(os.Stderr, "[ERR] %s", err.Error())
+		return nil // TODO handle error
 	}
 
 	return data
