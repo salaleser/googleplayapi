@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 func parseIDs(body []byte) []MetadataResponse {
-	const errMsg = "[ERR] googleplayapi.parseIDs(%s...): %v\n"
+	const errMsgFormat = "[ERR] googleplayapi.parseIDs(%s...): %v\n"
 	var data1 [][]interface{}
 	if err := json.Unmarshal(body, &data1); err != nil {
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return []MetadataResponse{} // TODO handle error
 	}
 
@@ -20,26 +21,26 @@ func parseIDs(body []byte) []MetadataResponse {
 
 	if d[0] != "wrb.fr" {
 		err := fmt.Errorf("the first metadata section element isn't \"wrb.fr\" (%q)", d[0])
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return []MetadataResponse{}
 	}
 
 	if d[1] != "lGYRle" {
 		err := fmt.Errorf("the second metadata section element isn't \"lGYRle\" (%q)", d[0])
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return []MetadataResponse{}
 	}
 
 	if d[2] == nil {
 		err := fmt.Errorf("the third metadata section element doesn't exist")
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return []MetadataResponse{}
 	}
 
 	var data2 []interface{}
 	if err := json.Unmarshal([]byte(d[2].(string)), &data2); err != nil {
 		err := fmt.Errorf("unmarshal gp IDs (2): %v", err)
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return []MetadataResponse{}
 	}
 
@@ -88,7 +89,7 @@ func parseIDs(body []byte) []MetadataResponse {
 	// FIXME
 	if len(i5) < 2 {
 		err := fmt.Errorf("len check: < 2")
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return []MetadataResponse{}
 	}
 
@@ -108,38 +109,57 @@ func parseIDs(body []byte) []MetadataResponse {
 }
 
 func parseMetadata(body []byte) MetadataResponse {
-	const errMsg = "[ERR] googleplayapi.parseMetadata(%s...): %v\n"
+	const errMsgFormat = "googleplayapi.parseMetadata(%s...): %v\n"
 	var data1 [][]interface{}
 	if err := json.Unmarshal(body, &data1); err != nil {
 		err := fmt.Errorf("unmarshal gp metadata: %v", err)
-		fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+		fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 		return MetadataResponse{}
 	}
 
 	var metadataData [][][]interface{}
-	var ratingData [][][]interface{}
+	var ratingData [][]interface{}
 	for _, d := range data1 {
 		if d[0].(string) != "wrb.fr" {
 			continue
 		}
 
+		if d[2] == nil {
+			err := fmt.Errorf("the third section element doesn't exist")
+			fmt.Fprintf(os.Stderr, "[ERR] %s", err.Error())
+			return MetadataResponse{}
+		}
+
 		switch d[1].(string) {
 		case "jLZZ2e":
-			metadataData = parse(d[2])
+			metadataData = processMetadataSection(d[2])
 		case "MLWfjd":
-			ratingData = parse(d[2])
+			ratingData = processRatingaSection(d[2])
 		default:
 			err := fmt.Errorf("the second section element not supported (%q)", d[0])
-			fmt.Fprintf(os.Stderr, errMsg, body[:10], err)
+			fmt.Fprintf(os.Stderr, errMsgFormat, body[:10], err)
 			return MetadataResponse{} // TODO handle error
 		}
 	}
 
+	rating, _ := strconv.ParseFloat(ratingData[0][6].([]interface{})[0].([]interface{})[0].(string), 32)
+	starsCount := ratingData[0][6].([]interface{})[2].([]interface{})[1].(float64)
+	stars1Count := ratingData[0][6].([]interface{})[1].([]interface{})[1].([]interface{})[1].(float64)
+	stars2Count := ratingData[0][6].([]interface{})[1].([]interface{})[2].([]interface{})[1].(float64)
+	stars3Count := ratingData[0][6].([]interface{})[1].([]interface{})[3].([]interface{})[1].(float64)
+	stars4Count := ratingData[0][6].([]interface{})[1].([]interface{})[4].([]interface{})[1].(float64)
+	stars5Count := ratingData[0][6].([]interface{})[1].([]interface{})[5].([]interface{})[1].(float64)
+
 	return MetadataResponse{
-		// AppID:      appID,
 		ArtistName: metadataData[0][12][5].([]interface{})[1].(string),
 		// ReleaseDate: data2[0][6][0][1].(float32),
-		Rating:      ratingData[0][6][0].([]interface{})[1].(float32),
+		Rating:      float32(rating),
+		StarsCount:  int32(starsCount),
+		Stars1Count: int32(stars1Count),
+		Stars2Count: int32(stars2Count),
+		Stars3Count: int32(stars3Count),
+		Stars4Count: int32(stars4Count),
+		Stars5Count: int32(stars5Count),
 		Title:       metadataData[0][0][0].(string),
 		Subtitle:    metadataData[0][10][1].([]interface{})[1].(string),
 		Description: metadataData[0][10][0].([]interface{})[1].(string),
@@ -148,14 +168,19 @@ func parseMetadata(body []byte) MetadataResponse {
 	}
 }
 
-func parse(d interface{}) [][][]interface{} {
-	if d == nil {
-		err := fmt.Errorf("the third section element doesn't exist")
+func processMetadataSection(d interface{}) [][][]interface{} {
+	var data [][][]interface{}
+	if err := json.Unmarshal([]byte(d.(string)), &data); err != nil {
+		err := fmt.Errorf("unmarshal gp metadata: %v", err)
 		fmt.Fprintf(os.Stderr, "[ERR] %s", err.Error())
 		return nil // TODO handle error
 	}
 
-	var data [][][]interface{}
+	return data
+}
+
+func processRatingaSection(d interface{}) [][]interface{} {
+	var data [][]interface{}
 	if err := json.Unmarshal([]byte(d.(string)), &data); err != nil {
 		err := fmt.Errorf("unmarshal gp metadata: %v", err)
 		fmt.Fprintf(os.Stderr, "[ERR] %s", err.Error())
