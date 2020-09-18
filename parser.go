@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 )
 
 func parseIDs(body []byte) []MetadataResponse {
@@ -142,7 +141,7 @@ func parseMetadata(body []byte) MetadataResponse {
 		}
 	}
 
-	rating, _ := strconv.ParseFloat(ratingData[0][6].([]interface{})[0].([]interface{})[0].(string), 32)
+	rating := ratingData[0][6].([]interface{})[0].([]interface{})[1].(float64)
 	starsCount := ratingData[0][6].([]interface{})[2].([]interface{})[1].(float64)
 	stars1Count := ratingData[0][6].([]interface{})[1].([]interface{})[1].([]interface{})[1].(float64)
 	stars2Count := ratingData[0][6].([]interface{})[1].([]interface{})[2].([]interface{})[1].(float64)
