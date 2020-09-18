@@ -7,6 +7,12 @@ type MetadataResponse struct { // TODO add more fields
 	AppID       string
 	ArtistName  string
 	Rating      float32
+	StarsCount  int32
+	Stars1Count int32
+	Stars2Count int32
+	Stars3Count int32
+	Stars4Count int32
+	Stars5Count int32
 	ReleaseDate string
 	Subtitle    string
 	Description string
